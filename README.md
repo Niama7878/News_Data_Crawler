@@ -24,4 +24,4 @@
 
 ## 使用教程
 
-[YouTube](https://youtu.be/kra8P4W97So) [Bilibili](https://www.bilibili.com/video/BV1EfkDY9EgL)
+[YouTube](https://youtu.be/NNNc-X5SoCs) [Bilibili](https://www.bilibili.com/video/BV1JBrVYSECM)
