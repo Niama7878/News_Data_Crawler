@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="查看最新新闻、趋势和详情">
+    <meta name="keywords" content="新闻, 仪表盘, 趋势图">
+    <title>新闻仪表盘</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <header class="text-center mb-4">
+            <h1 class="display-4 fw-bold">新闻仪表盘</h1>
+            <p class="text-muted">查看最新新闻趋势与详情</p>
+        </header>
+
+        <form method="get" action="{{ url_for('main.index') }}" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control rounded-pill" placeholder="搜索新闻" value="{{ search_query }}" aria-label="搜索新闻">
+                <button type="submit" class="btn btn-primary rounded-pill ms-2">搜索</button>
+            </div>
+        </form>
+
+        <div id="trend-chart" style="width: 100%; height: 300px;">
+            <p class="text-center text-muted">正在加载数据，请稍候...</p>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var trendChart = echarts.init(document.getElementById('trend-chart'));
+                var option = {
+                    title: { text: '新闻趋势图', textStyle: { fontWeight: 'bold' } },
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { 
+                        type: 'category', 
+                        data: {{ trend_dates | tojson or [] }},
+                        axisLabel: { rotate: 45, color: '#555' } 
+                    },
+                    yAxis: { type: 'value', axisLine: { show: true, lineStyle: { color: '#aaa' } } },
+                    series: [{
+                        name: '文章数量',
+                        type: 'line',
+                        data: {{ trend_counts | tojson or [] }},
+                        areaStyle: { color: 'rgba(0,123,255,0.2)' },
+                        lineStyle: { width: 3 },
+                        itemStyle: { color: '#007bff' },
+                    }]
+                };
+                trendChart.setOption(option);
+                window.addEventListener('resize', function () {
+                    trendChart.resize();
+                });
+            });
+        </script>
+
+        {% if articles %}
+            <h2 class="mb-4">最新文章</h2>
+            <div class="row">
+                {% for article in articles %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{{ url_for('main.article_details', article_id=article.id) }}" class="stretched-link">
+                                        {{ article.title }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted">来源: {{ article.source }} | {{ article.time.strftime('%Y-%m-%d') if article.time else '未知时间' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted">没有找到相关新闻。</p>
+        {% endif %}
+
+        <nav aria-label="分页" class="my-4">
+            {% if pagination and pagination.pages > 1 %}
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num, search=search_query) }}" tabindex="-1">上一页</a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=3) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('main.index', page=page_num, search=search_query) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num, search=search_query) }}">下一页</a>
+                    </li>
+                </ul>
+            {% endif %}
+        </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
